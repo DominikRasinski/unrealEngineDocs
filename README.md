@@ -61,9 +61,11 @@ W momencie kiedy `Pionek` jest kontrolowany przez gracza albo AI jest uważany, 
 
 `Player Controller` jest wyspecjalizowaną klasą która przyjmuje `input` gracza i tłumaczy go na interackję wewnątrz gry. `Player Controller` jest zazwyczaj opanowany przez klasę `Pawn` lub `Character` jako reprezentanta gracza w świecie gry.
 
-TODO: opisać zachowanie kontrolera gracza dla gry multiplayer
+Instancja kontrolera dla gracza jest podstawowym punktem interackcji gracza z grą multiplayer.
+Podczas gry multiplayer serwer posiada jedną instację `Player Controller` dla każdego gracza w grze, ze względu na wykonywanie wymaganych funkcji umożliwających granie po sieci dla każdego gracza.
+Każdy klient posiada tylko jeden `Player Controller` indedyfikujący gracza podczas komunikacji z serwerem.
 
-Powiązana klasa C++ to PlayerController
+Powiązana klasa C++ to `PlayerController`
 
 ---
 
@@ -71,16 +73,80 @@ Powiązana klasa C++ to PlayerController
 
 Z Automatu dodanie `Pawn` lub `Character` skończy się wpięciem podstawowej funkcjonalności z kontrolera `AI Controller` chyba, że zostanie wskazane innaczej podczas dodawania ów klas.
 
-Powiązana klasa C++ to AIController
+Powiązana klasa C++ to `AIController`
 
 ---
 
-TODO: dokończyć
+`Player State` stan jest uczestnikiem w grze takim jak gracz lub bot który symuluje gracza.
+Nie grywalne AI które jest częścia świata gry nie posiada dostępu do `Player State`
 
-- `Player State`
-- `Game Mode`
-- `Game State`
-- `Brush`
-- `Volume`
-- `Level`
-- `World`
+Przykładowe dane jakie `Player State` może przechowywać:
+
+- Nazwa
+- Aktualny poziom
+- Ilość punktów życia
+- Ilość punktów
+
+Dla gier multiplayer `Player State` wszystkie maszyny uzyskują ten stan i replikują dane z serwera do klienta aby trzymać dane w synchronizacji. Zachowanie `stanu gracza` jest inne od zachowania `kontrolera gracza` ze względu na to, że kontroler tylko istnieje na maszynie gracza które reprezentuje.
+
+Powiązana klasa C++ `PlayerState`
+
+---
+
+`Game Mode` tryb gry pozwala na ustawienie zasad gry jaka jest aktualnie grana.
+Zasady mogą zawierać takie rzeczy jak:
+
+- Jak gracze dołączają do gry
+- W jakim momencie gra może zostać zapauzowana
+- Każde zachowanie warunkujące wygraną
+
+`Game Mode` domyślnie jest ustawiany w ustawieniach projektu (Project Settings) i zasady gry mogą być nadpisane dla każdego poziomu. Chociaż jest to opcjonalne, gra może powstać na podstawie tylko jednego `Trybu gry` dla każdego poziomu.
+
+W grze multiplayer `tryb gry` tylko istnieje dla serwera i zasady są replikowane i wysyłane do połączonych klientów z serwerem.
+
+Powiązana klasa C++ `GameMode`
+
+---
+
+`Game State` stan gry jest kontenerem, który przechowuje informacje jakie powinny zostać zreplikowane dla każdego klienta w grze.
+W prostrzym języku to jest stan gry dla każdego podłaczonego gracza.
+
+Przykładowe wartości jakie może `Stan gry` przetrzymywać:
+
+- Informacje na temat punktacji gry
+- Czy mecz się zaczął, czy jednak nie
+- Ile graczy AI zrespawnować
+
+Dla gier multiplayer jest tylko jedna instacja `Statnu gry` dla każdej maszyny gracza. Lokalnie przechowywana wartość `stanu gry` uzyskuje informacje z instacji `stanu gry` przetrzymywanego na serwerze.
+
+Powiązana klasa C++ `GameState`
+
+---
+
+`Brush` jest `Aktorem` który opisuje kształt 3D taki jak sześcian albo kula.
+`Pędzle` można ustawiać w projekcie aby definiować geometrię poziomu.
+
+Zwane są również jako `Binary Space Partion` lub `BSP brushes`.
+
+Aktorzy tego typu są pomocne do szybkiego ułożenia poziomu w projekcie.
+
+---
+
+`Volume` jest objętością ograniczającą przestrzeń 3D, która ma różne zastosowanie w zależności od tego z jakimi efektami jest powiązane.
+
+Przykład:
+
+- Blocking Volumes są nie widzialne i wykorzystywne są do tego aby `Aktor` nie mógł przejść przez dany `Volumen` (ograniczanie przejść)
+- Pain Caousing Volumes przyczynia się do zadawania obrażeń gdy `Aktor` przechodzi przez
+- Trigger Volumes sa zaprogramowane aby wywoływać wydarzenie kiedy `Aktor` wchodzi albo wychodzi z niego
+
+---
+
+`Level` jest strefą rozgrywki którą definiujemy. `Poziomy` zawierają wszystkie elementy z jakie gracz może widzieć oraz ingerować.
+
+Silnik Unreal zapisuje każdy poziom jako oddzielnyu `.umap` plik. Te pliki są czasami nazywane jako `Maps`
+
+---
+
+`World` jest kontenerem dla wszystkich poziomów jakie tworzą grę.
+Zajmuje się całym procesem strumieniowania poziomów oraz sprawnowania/tworzenia dynamicznych `Aktorów`
